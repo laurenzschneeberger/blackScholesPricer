@@ -1,19 +1,17 @@
-# blackScholesPricer. Requires installation of numpy and scipy packages. 
+# Implementing the black-scholes formula in python
 
 import numpy as np
 from scipy.stats import norm
+from py_vollib.black_scholes import black_scholes as bs
+from py_vollib.black_scholes.greeks.analytical import delta,gamma, vega, theta, rho
 
-# define variables
 print("This program will output an option price for a plain vanilla call option. To get the price for a put, change the option type to 'P' in line 19 of the code.")
 
+# define variables
 r = float(input("Enter the interest rate in decimals: ")) #interest rate
-
 S = float(input("Enter the underlying: ")) #underlying
-
 K = float(input("Enter the strike price: ")) #strike price
-
 T = float(input("Enter the maturity date in days "))/365 #maturity
-
 sigma = float(input("Enter the volatility of the underlying: ")) #vol
 
 def blackScholes(r, S, K, T, sigma, type="C"):
@@ -27,6 +25,80 @@ def blackScholes(r, S, K, T, sigma, type="C"):
     price = K*np.exp(-r*T)*norm.cdf(-d2,0,1)-S*norm.cdf(-d1,0,1)
    return price
   except:
-    print("Please confirm all option paramters above!")
+    print("Please confirm option type, either c for call or p for put")
+  print("Option Price is: ", round(blackScholes(r, S, K, T, sigma, type="C"), 2))
 
-print("Option Price is: ", round(blackScholes(r, S, K, T, sigma, type="C"), 2))
+# Greeks----------------------------------------------------------------------------------------------------------------
+# Delta
+def delta_calc(r, S, K, T, sigma, type="C"):
+  "Calculate delta of a european option"
+  d1 = (np.log(S/K)+(r+sigma**2/2)*T)/(sigma*np.sqrt(T))
+  d2 = d1 - sigma*np.sqrt(T)
+  try:
+   if type == "C":
+     delta_calc = norm.cdf(d1,0,1)
+   elif type == "P":
+    delta_calc = -norm.cdf(-d1,0,1)
+   return delta_calc, delta(type, S, K, T, r, sigma)
+  except:
+    print("Please confirm option type, either c for call or p for put")
+
+# Gamma
+def gamma_calc(r, S, K, T, sigma, type="C"):
+  "Calculate gamma of a european option"
+  d1 = (np.log(S/K)+(r+sigma**2/2)*T)/(sigma*np.sqrt(T))
+  d2 = d1 - sigma*np.sqrt(T)
+  try:
+     gamma_calc = norm.pdf(d1,0,1)/(S*sigma*np.sqrt(T))
+     return gamma_calc, gamma(type, S, K, T, r, sigma)
+  except:
+    print("Please confirm option type, either c for call or p for put")
+
+# Vega
+def vega_calc(r, S, K, T, sigma, type="C"):
+  "Calculate gamma of a european option"
+  d1 = (np.log(S/K)+(r+sigma**2/2)*T)/(sigma*np.sqrt(T))
+  d2 = d1 - sigma*np.sqrt(T)
+  try:
+     vega_calc = S*norm.pdf(d1,0, 1)*np.sqrt(T)
+     return vega_calc, vega(type, S, K, T, r, sigma)
+  except:
+    print("Please confirm option type, either c for call or p for put")
+
+# Theta
+def theta_calc(r, S, K, T, sigma, type="C"):
+  "Calculate delta of a european option"
+  d1 = (np.log(S/K)+(r+sigma**2/2)*T)/(sigma*np.sqrt(T))
+  d2 = d1 - sigma*np.sqrt(T)
+  try:
+   if type == "C":
+     theta_calc = S*norm.pdf(d1,0,1)*sigma/(2*np.sqrt(T))-r*K*np.exp(-r*T)*norm.cdf(d2,0,1)
+   elif type == "P":
+    theta_calc = S*norm.pdf(d1,0,1)*sigma/(2*np.sqrt(T))+ r*K*np.exp(-r*T)*norm.cdf(-d2,0,1)
+   return theta_calc, theta(type, S, K, T, r, sigma)
+  except:
+    print("Please confirm option type, either c for call or p for put")
+
+# Rho
+def rho_calc(r, S, K, T, sigma, type="C"):
+  "Calculate delta of a european option"
+  d1 = (np.log(S/K)+(r+sigma**2/2)*T)/(sigma*np.sqrt(T))
+  d2 = d1 - sigma*np.sqrt(T)
+  try:
+   if type == "C":
+     rho_calc = K*T*np.exp(-r*T)*norm.cdf(d2,0,1)
+   elif type == "P":
+    rho_calc = -K*T*np.exp(-r*T)*norm.cdf(-d2,0,1)
+   return rho_calc, rho(type, S, K, T, r, sigma)
+  except:
+    print("Please confirm option type, either c for call or p for put")
+
+# Printing -------------------------------------------------------------------------------------------------------------
+
+option_type = 'c'
+print("Price: ", blackScholes(r, S, K, T, sigma, type="C"))
+print("Delta: ", delta_calc(r, S, K, T, sigma, type="C"))
+print("Gamma: ", gamma_calc(r, S, K, T, sigma, type="C"))
+print("Vega: ", vega_calc(r, S, K, T, sigma, type="C"))
+print("Theta: ", theta_calc(r, S, K, T, sigma, type="C"))
+print("Rho: ", rho_calc(r, S, K, T, sigma, type="C"))
